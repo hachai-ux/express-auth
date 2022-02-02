@@ -8,7 +8,7 @@ const LocalStrategy = require("passport-local").Strategy;
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const mongoDb = "YOUR MONGO URL HERE";
+const mongoDb = "mongodb+srv://user:password123456@cluster0.7rjgc.mongodb.net/auth?retryWrites=true";
 mongoose.connect(mongoDb, { useUnifiedTopology: true, useNewUrlParser: true });
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "mongo connection error"));
@@ -31,5 +31,18 @@ app.use(passport.session());
 app.use(express.urlencoded({ extended: false }));
 
 app.get("/", (req, res) => res.render("index"));
+app.get("/sign-up", (req, res) => res.render("sign-up-form"));
+app.post("/sign-up", (req, res, next) => {
+    const user = new User({
+        username: req.body.username,
+        password: req.body.password
+    }).save(err => {
+        if (err) {
+            return next(err);
+        }
+        res.redirect("/");
+    });
+});
+
 
 app.listen(3000, () => console.log("app listening on port 3000!"));
