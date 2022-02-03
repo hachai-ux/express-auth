@@ -51,10 +51,6 @@ passport.deserializeUser(function(id, done) {
 });
 
 
-app.post("/log-in", (req, res, next) => {
-    res.render('Logged in - Nothing implemented yet')
-});
-
 app.use(session({ secret: "cats", resave: false, saveUninitialized: true }));
 app.use(passport.initialize());
 app.use(passport.session());
@@ -83,5 +79,9 @@ app.post(
   })
 );
 
+app.get("/log-out", (req, res) => {
+  req.logout();
+  res.redirect("/");
+});
 
 app.listen(3000, () => console.log("app listening on port 3000!"));
