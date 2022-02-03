@@ -6,6 +6,7 @@ const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
+const bcrypt = require("bcryptjs");
 
 const mongoDb = "mongodb+srv://user:password123456@cluster0.7rjgc.mongodb.net/auth?retryWrites=true";
 mongoose.connect(mongoDb, { useUnifiedTopology: true, useNewUrlParser: true });
@@ -34,10 +35,15 @@ passport.use(
             if (!user) {
                 return done(null, false, { message: "Incorrect Username" });
             }
-            if (user.password != password) {
-                return done(null, false, { message: "Incorrect Password" });
-            }
-            return done(null, user);
+            bcrypt.compare(password, user.password, (err, res) => {
+                if (res) {
+                    // passwords match! log user in
+                    return done(null, user)
+                } else {
+                    // passwords do not match!
+                    return done(null, false, { message: "Incorrect password" })
+                }
+            })
         })
     })
 )
@@ -55,21 +61,29 @@ app.use(session({ secret: "cats", resave: false, saveUninitialized: true }));
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(express.urlencoded({ extended: false }));
-
+//set local user state
+app.use(function(req, res, next) {
+  res.locals.currentUser = req.user;
+  next();
+});
 
 
 app.get("/", (req, res) => res.render("index", {user: req.user}));
 app.get("/sign-up", (req, res) => res.render("sign-up-form"));
 app.post("/sign-up", (req, res, next) => {
+    bcrypt.hash(req.body.password, 10, (err, hashedPassword) => {
+    // if err, do something
+    // otherwise, store hashedPassword in DB
     const user = new User({
-        username: req.body.username,
-        password: req.body.password
+    username: req.body.username,
+    password: hashedPassword
     }).save(err => {
-        if (err) {
-            return next(err);
-        }
-        res.redirect("/");
+    if (err) {
+        return next(err);
+    }
+    res.redirect("/");
     });
+    })
 });
 app.post(
   "/log-in",
