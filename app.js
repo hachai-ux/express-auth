@@ -62,7 +62,7 @@ app.use(express.urlencoded({ extended: false }));
 
 
 
-app.get("/", (req, res) => res.render("index"));
+app.get("/", (req, res) => res.render("index", {user: req.user}));
 app.get("/sign-up", (req, res) => res.render("sign-up-form"));
 app.post("/sign-up", (req, res, next) => {
     const user = new User({
